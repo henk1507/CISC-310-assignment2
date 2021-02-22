@@ -47,6 +47,24 @@ int main (int argc, char **argv)
     //  For all other commands, check if an executable by that name is in one of the PATH directories
     //   If yes, execute it
     //   If no, print error statement: "<command_name>: Error command not found" (do include newline)
+    std::string userinput;
+
+    userinput = "";
+
+    while(userinput != "exit")
+    {
+        std::cout << "osshell> ";
+        std::cin >> userinput;
+
+        std::cin.clear();
+        //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        if (userinput == "exit")
+        {
+            break;
+        }
+        
+    }
 
     // Free allocated memory
     freeArrayOfCharArrays(os_path_list, 16);
