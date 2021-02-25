@@ -48,22 +48,57 @@ int main (int argc, char **argv)
     //   If yes, execute it
     //   If no, print error statement: "<command_name>: Error command not found" (do include newline)
     std::string userinput;
+    std::string history[128];
+    int index = 0;
+    int childcheck;
+
+    //if (we created a file)
+    //  find index from file
 
     userinput = "";
+    char **userarray;
 
     while(userinput != "exit")
     {
         std::cout << "osshell> ";
-        std::cin >> userinput;
+        std::getline(std::cin, userinput);
 
         std::cin.clear();
         //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        history[index] = userinput;
+        index ++;
+
+        std::cout << "segfault check 1" << std::endl;
+
+        splitString(userinput, ' ', userarray);
+
+        std::cout << "segfault check 4" << std::endl;
+        std::cout << (*userarray)[0];
 
         if (userinput == "exit")
         {
             break;
         }
-        
+        else if (userinput == "history")
+        {
+            for(int i = 0; i < index - 1; i ++)
+            {
+                std::cout << "  " << (i + 1) << ": " << history[i] << std::endl;
+            }
+        }
+        else if (userinput == "")
+        {
+            //nothing happens
+        }
+        else
+        {
+            childcheck = fork();
+            if (childcheck == 0)
+            {
+                //execv()
+            }
+        }
     }
 
     // Free allocated memory
@@ -109,6 +144,7 @@ void freeArrayOfCharArrays(char **array, size_t array_length)
 */
 void splitString(std::string text, char d, char **result)
 {
+    std::cout << "segfault check 2" << std::endl;
     int i;
     std::vector<std::string> list;
     std::stringstream ss(text);
@@ -124,4 +160,5 @@ void splitString(std::string text, char d, char **result)
         strcpy(result[i], list[i].c_str());
     }
     result[list.size()] = NULL;
+    std::cout << "segfault check 3" << std::endl;
 }
