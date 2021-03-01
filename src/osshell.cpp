@@ -8,26 +8,28 @@
 
 void allocateArrayOfCharArrays(char ***array_ptr, size_t array_length, size_t item_size);
 void freeArrayOfCharArrays(char **array, size_t array_length);
-void splitString(std::string text, char d, char **result);
+void splitString(std::string text, char d, std::vector<std::string>& result);
 
 int main (int argc, char **argv)
 {
     // Get list of paths to binary executables
-    // `os_path_list` supports up to 16 directories in PATH, 
-    //     each with a directory name length of up to 64 characters
-    char **os_path_list;
-    allocateArrayOfCharArrays(&os_path_list, 16, 64);
+    std::vector<std::string> os_path_list;
     char* os_path = getenv("PATH");
     splitString(os_path, ':', os_path_list);
 
 
-    // Example code for how to loop over NULL terminated list of strings
-    int i = 0;
-    while (os_path_list[i] != NULL)
+    /************************************************************************************
+     *   Example code - remove in actual program                                        *
+     ************************************************************************************/
+    // Shows how to loop over the directories in the PATH environment variable
+    int i;
+    for (i = 0; i < os_path_list.size(); i++)
     {
-        printf("PATH[%2d]: %s\n", i, os_path_list[i]);
-        i++;
+        printf("PATH[%2d]: %s\n", i, os_path_list[i].c_str());
     }
+    /************************************************************************************
+     *   End example code                                                               *
+     ************************************************************************************/
 
 
     // Welcome message
@@ -56,7 +58,7 @@ int main (int argc, char **argv)
     //  find index from file
 
     userinput = "";
-    char **userarray;
+    std::vector<std::string> userarray;
 
     while(userinput != "exit")
     {
@@ -74,7 +76,7 @@ int main (int argc, char **argv)
         splitString(userinput, ' ', userarray);
 
         std::cout << "segfault check 4" << std::endl;
-        std::cout << (*userarray)[0];
+        //std::cout << (*userarray)[0];
 
         if (userinput == "exit")
         {
@@ -101,9 +103,9 @@ int main (int argc, char **argv)
         }
     }
 
-    // Free allocated memory
-    freeArrayOfCharArrays(os_path_list, 16);
-    freeArrayOfCharArrays(command_list, 32);
+    // free memory for `command_list_exec`
+    freeArrayOfCharArrays(command_list_exec, command_list.size() + 1);
+    printf("------\n");
 
     return 0;
 }
@@ -140,16 +142,15 @@ void freeArrayOfCharArrays(char **array, size_t array_length)
 /*
    text: string to split
    d: character delimiter to split `text` on
-   result: NULL terminated list of strings (char **) - result will be stored here
+   result: vector of strings - result will be stored here
 */
-void splitString(std::string text, char d, char **result)
+void splitString(std::string text, char d, std::vector<std::string>& result)
 {
-    std::cout << "segfault check 2" << std::endl;
     enum states { NONE, IN_WORD, IN_STRING } state = NONE;
 
     int i;
-    std::vector<std::string> list;
     std::string token;
+    result.clear();
     for (i = 0; i < text.length(); i++)
     {
         char c = text[i];
@@ -172,7 +173,7 @@ void splitString(std::string text, char d, char **result)
             case IN_WORD:
                 if (c == d)
                 {
-                    list.push_back(token);
+                    result.push_back(token);
                     state = NONE;
                 }
                 else
@@ -183,7 +184,7 @@ void splitString(std::string text, char d, char **result)
             case IN_STRING:
                 if (c == '\"')
                 {
-                    list.push_back(token);
+                    result.push_back(token);
                     state = NONE;
                 }
                 else
@@ -195,13 +196,6 @@ void splitString(std::string text, char d, char **result)
     }
     if (state != NONE)
     {
-        list.push_back(token);
+        result.push_back(token);
     }
-
-    for (i = 0; i < list.size(); i++)
-    {
-        strcpy(result[i], list[i].c_str());
-    }
-    result[list.size()] = NULL;
-    std::cout << "segfault check 3" << std::endl;
 }
