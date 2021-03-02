@@ -56,7 +56,11 @@ int main (int argc, char **argv)
     //  find index from file
 
     userinput = "";
-    char **userarray;
+    std::vector<std::string> userarray;
+
+    char *datething = {'d', 'a', 't', 'e'};
+
+    static char* const argues[] = {datething, NULL};
 
     while(userinput != "exit")
     {
@@ -69,12 +73,9 @@ int main (int argc, char **argv)
         history[index] = userinput;
         index ++;
 
-        std::cout << "segfault check 1" << std::endl;
-
         splitString(userinput, ' ', userarray);
 
-        std::cout << "segfault check 4" << std::endl;
-        std::cout << (*userarray)[0];
+        //std::cout << (*userarray)[0];
 
         if (userinput == "exit")
         {
@@ -96,7 +97,8 @@ int main (int argc, char **argv)
             childcheck = fork();
             if (childcheck == 0)
             {
-                //execv()
+                std::cout << argues;
+                execv("/bin/ls", argues);
             }
         }
     }
