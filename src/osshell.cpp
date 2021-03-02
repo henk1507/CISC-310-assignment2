@@ -58,10 +58,6 @@ int main (int argc, char **argv)
     userinput = "";
     std::vector<std::string> userarray;
 
-    char *datething = {'d', 'a', 't', 'e'};
-
-    static char* const argues[] = {datething, NULL};
-
     while(userinput != "exit")
     {
         std::cout << "osshell> ";
@@ -70,12 +66,13 @@ int main (int argc, char **argv)
         std::cin.clear();
         //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
+        splitString(userinput, ' ', command_list);
+        vectorOfStringsToArrayOfCharArrays(command_list, &command_list_exec);
+
         history[index] = userinput;
         index ++;
 
         splitString(userinput, ' ', userarray);
-
-        //std::cout << (*userarray)[0];
 
         if (userinput == "exit")
         {
@@ -94,12 +91,16 @@ int main (int argc, char **argv)
         }
         else
         {
+            for(int i = 0; i < os_path_list.size(); i++)
+            {
+                
+            }
             childcheck = fork();
             if (childcheck == 0)
             {
-                std::cout << argues;
-                execv("/bin/ls", argues);
+                execv("/usr/bin/ls", command_list_exec); // argues =  [ls, -lh, NULL]
             }
+            freeArrayOfCharArrays(command_list_exec, command_list.size() + 1);
         }
     }
 
