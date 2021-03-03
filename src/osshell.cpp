@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 
 void splitString(std::string text, char d, std::vector<std::string>& result);
 void vectorOfStringsToArrayOfCharArrays(std::vector<std::string>& list, char ***result);
@@ -49,15 +51,20 @@ int main (int argc, char **argv)
     //   If no, print error statement: "<command_name>: Error command not found" (do include newline)
     std::string userinput;
     std::string history[128];
+    std::string pathtest;
+    std::string foundpath;
     int index = 0;
     int childcheck;
+    int stat_loc;
+
+    struct stat buffer;
 
     //if (we created a file)
     //  find index from file
 
     userinput = "";
     std::vector<std::string> userarray;
-
+    
     while(userinput != "exit")
     {
         std::cout << "osshell> ";
@@ -69,8 +76,11 @@ int main (int argc, char **argv)
         splitString(userinput, ' ', command_list);
         vectorOfStringsToArrayOfCharArrays(command_list, &command_list_exec);
 
-        history[index] = userinput;
-        index ++;
+        if(userinput != "")
+        {
+            history[index] = userinput;
+            index ++;
+        }
 
         splitString(userinput, ' ', userarray);
 
@@ -91,16 +101,36 @@ int main (int argc, char **argv)
         }
         else
         {
+            foundpath = "";
+
             for(int i = 0; i < os_path_list.size(); i++)
             {
-                
+                pathtest = (os_path_list[i] + "/" + command_list_exec[0]);
+
+                if(stat(pathtest.c_str(), &buffer) == 0)
+                {
+                    foundpath = pathtest;
+                    break;
+                }
             }
-            childcheck = fork();
-            if (childcheck == 0)
+
+            if(foundpath == "")
             {
-                execv("/usr/bin/ls", command_list_exec); // argues =  [ls, -lh, NULL]
+                std::cout << userinput << ": Error command not found" << std::endl;
             }
-            freeArrayOfCharArrays(command_list_exec, command_list.size() + 1);
+            else
+            {
+                childcheck = fork();
+                if (childcheck == 0)
+                {
+                    execv(foundpath.c_str(), command_list_exec); // argues =  [ls, -lh, NULL]
+                }
+                else
+                {
+                    waitpid(childcheck, &stat_loc, WUNTRACED);
+                }
+                freeArrayOfCharArrays(command_list_exec, command_list.size() + 1);
+            }
         }
     }
 
