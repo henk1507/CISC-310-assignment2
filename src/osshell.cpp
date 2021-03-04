@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <stdio.h>
 
 void splitString(std::string text, char d, std::vector<std::string>& result);
 void vectorOfStringsToArrayOfCharArrays(std::vector<std::string>& list, char ***result);
@@ -59,11 +60,38 @@ int main (int argc, char **argv)
 
     struct stat buffer;
 
+    FILE *oldhistory;
+    FILE *writehistory;
+
+    char cwd[32768];
+    char buff[255];
+
+    getcwd(cwd, sizeof(cwd));
+
+    oldhistory = fopen(strcat(cwd, "/oldhistory.txt"), "r");
+
+    fgets(buff, 255, oldhistory);
+
+    char newline[1];
+    newline[0] = '\n';
+
+    if(atoi(buff) < 0);
+    {
+        index = atoi(buff);
+        for(int i = 0; i < index; i++)
+        {
+            fgets(buff, 255, oldhistory);
+            buff[strcspn(buff, "\n")] = '\0';
+            history[i] = buff;
+        }
+    }
+
+    fclose(oldhistory);
+
     //if (we created a file)
     //  find index from file
 
     userinput = "";
-    std::vector<std::string> userarray;
     
     while(userinput != "exit")
     {
@@ -76,23 +104,55 @@ int main (int argc, char **argv)
         splitString(userinput, ' ', command_list);
         vectorOfStringsToArrayOfCharArrays(command_list, &command_list_exec);
 
-        if(userinput != "")
+        if(userinput != "" && strcmp(command_list_exec[0], "history") != 0)
         {
             history[index] = userinput;
             index ++;
         }
 
-        splitString(userinput, ' ', userarray);
-
         if (userinput == "exit")
         {
+            writehistory = fopen(cwd, "w+");
+
+            fputs(std::to_string(index).c_str(), writehistory);
+
+            for(int i = 0; i < index; i++)
+            {
+                fputs("\n", writehistory);
+                fputs(history[i].c_str(), writehistory);
+            }
+
             break;
         }
-        else if (userinput == "history")
+        else if(strcmp(command_list_exec[0], "history") == 0)
         {
-            for(int i = 0; i < index - 1; i ++)
+            if(command_list_exec[1] == NULL)
             {
-                std::cout << "  " << (i + 1) << ": " << history[i] << std::endl;
+                for(int i = 0; i < index; i ++)
+                {
+                    std::cout << "  " << (i + 1) << ": " << history[i] << std::endl;
+                }
+
+                history[index] = userinput;
+                index ++;
+            }
+            else if(strcmp(command_list_exec[1], "clear") == 0)
+            {
+                index = 0;
+            }
+            else if(atoi(command_list_exec[1]) > 0)
+            {
+                for(int i = index - atoi(command_list_exec[1]); i < index; i ++)
+                {
+                    std::cout << "  " << (i + 1) << ": " << history[i] << std::endl;
+                }
+
+                history[index] = userinput;
+                index ++;
+            }
+            else
+            {
+                std::cout << "Error: history expects an integer > 0 (or 'clear')" << std::endl;
             }
         }
         else if (userinput == "")
@@ -105,7 +165,14 @@ int main (int argc, char **argv)
 
             for(int i = 0; i < os_path_list.size(); i++)
             {
-                pathtest = (os_path_list[i] + "/" + command_list_exec[0]);
+                if(userinput[0] == '.' || userinput[0] == '/')
+                {
+                    pathtest = command_list_exec[0];
+                }
+                else
+                {
+                    pathtest = (os_path_list[i] + "/" + command_list_exec[0]);
+                }
 
                 if(stat(pathtest.c_str(), &buffer) == 0)
                 {
@@ -123,7 +190,7 @@ int main (int argc, char **argv)
                 childcheck = fork();
                 if (childcheck == 0)
                 {
-                    execv(foundpath.c_str(), command_list_exec); // argues =  [ls, -lh, NULL]
+                    execv(foundpath.c_str(), command_list_exec);
                 }
                 else
                 {
@@ -171,6 +238,7 @@ int main (int argc, char **argv)
      *   End example code                                                               *
      ************************************************************************************/
 
+    fclose(writehistory);
 
     return 0;
 }
